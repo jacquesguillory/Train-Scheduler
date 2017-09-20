@@ -1,29 +1,22 @@
-  /* global firebase moment */
-// Steps to complete:
-// 1. Initialize Firebase
-// 2. Create button for adding new employees - then update the html + update the database
-// 3. Create a way to retrieve employees from the employee database.
-// 4. Create a way to calculate the months worked. Using difference between start and current time.
-//    Then use moment.js formatting to set difference in months.
-// 5. Calculate Total billed
-// 1. Initialize Firebase
 var config = {
-    apiKey: "AIzaSyDaP9vnmE4vEjDAjhV4J5hYPtqG4drvzag",
-    authDomain: "train-scheduler-8b59a.firebaseapp.com",
-    databaseURL: "https://train-scheduler-8b59a.firebaseio.com",
-    projectId: "train-scheduler-8b59a",
-    storageBucket: "train-scheduler-8b59a.appspot.com",
-    messagingSenderId: "827484978669"
+  apiKey: "AIzaSyDaP9vnmE4vEjDAjhV4J5hYPtqG4drvzag",
+  authDomain: "train-scheduler-8b59a.firebaseapp.com",
+  databaseURL: "https://train-scheduler-8b59a.firebaseio.com",
+  projectId: "train-scheduler-8b59a",
+  storageBucket: "train-scheduler-8b59a.appspot.com",
+  messagingSenderId: "827484978669"
 };
 firebase.initializeApp(config);
 var database = firebase.database();
+
+$( document ).ready(function() {
 // 2. Button for adding trains
 $("#add-train-btn").on("click", function(event) {
   event.preventDefault();
   // Grabs user input
   var trainName = $("#train-name-input").val().trim();
   var dest = $("#destination-input").val().trim();
-  var firstTime = moment($("#first-input").val().trim(), "HH:mm");
+  var firstTime = $("#first-input").val().trim();
   var freq = $("#frequency-input").val().trim();
 
   // Creates local "temporary" object for holding train data
@@ -62,11 +55,47 @@ database.ref().on("child_added", function(childSnapshot, prevChildKey) {
   console.log(tFirst);
   console.log(tFreq);
   // To calculate next arrival
-  var tNext = moment(tFirst, 'HH:mm').add(tFreq, 'minutes').format("hh:mm");
+  var tNext = nextArrival(tFirst, tFreq);
+  console.log(tNext);
   // Calculate the minutes away
-  var tMinutes = moment(tNext, 'HH:mm').toNow('minutes');
+  var tMinutes = minAway(tNext);
   // Add each train's data into the table
   $("#train-table > tbody").append("<tr><td>" + tName + "</td><td>" + tDest + "</td><td>" +
-  tFreq + "</td><td>" + tNext + "</td><td>" + tMinutes + "</td></tr>");
+    tFreq + "</td><td>" + tNext + "</td><td>" + tMinutes + "</td></tr>");
 });
+
+
+// function for calculating next arrival
+function nextArrival(first, freak) {
+  var currentTime = moment().format("HH:mm");
+  var trainTimes = [];
+  var currentWait = first;
+
+  while (currentWait < currentTime && currentWait < "23:59") {
+    var next = moment(currentWait, "HH:mm").add(freak, 'm').format("HH:mm");
+    trainTimes.push(next);
+    currentWait = next;
+  }
+
+  var nextTrain = trainTimes[trainTimes.length - 1];
+  return nextTrain;
+  console.log(nextTrain);
+  
+}
+
+// calculate minutes away
+function minAway(nextTrain) {
+  var currentTime = moment().format("HH:mm");
+  var minutes = (moment(nextTrain, "HH:mm").diff(moment(currentTime, "HH:mm")) / 60000);
+  return minutes;
+}
+
+
+});
+
+
+
+
+
+
 
